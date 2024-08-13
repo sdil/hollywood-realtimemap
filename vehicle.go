@@ -18,6 +18,13 @@ type Position struct {
 	Timestamp time.Time
 }
 
+type (
+	positionRequest struct {}
+	positionResponse struct {
+		Position Position
+	}
+)
+
 func NewVehicle() actor.Receiver {
 	return &Vehicle{}
 }
@@ -32,7 +39,9 @@ func (v *Vehicle) Receive(ctx *actor.Context) {
 	case *Position:
 		v.position = append(v.position, *msg)
 		fmt.Println(v.position)
-		// fmt.Println("actor has received", v.id, msg.Latitude, msg.Longitude)
+	case *positionRequest:
+		res := positionResponse{Position: v.position[len(v.position)-1]}
+		ctx.Respond(res)
 	}
 }
 

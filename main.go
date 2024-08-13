@@ -3,12 +3,34 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"github.com/anthdm/hollywood/actor"
 	"net/http"
+	"os"
+	"time"
+
+	"github.com/anthdm/hollywood/actor"
 )
 
 var pids = make(map[string]*actor.PID)
+
+func createVehicleHandler(engine *actor.Engine) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vid := r.URL.Query().Get("id")
+
+		pid := pids[vid]
+		resp := engine.Request(pid, &positionRequest{}, time.Minute)
+		result, err := resp.Result()
+		if err != nil {
+			fmt.Println("Error requesting position", err)
+			http.Error(w, "Error requesting position", http.StatusInternalServerError)
+			return
+		}
+		if result, ok := result.(positionResponse); ok {
+			fmt.Fprintf(w, "Position: %v", result.Position)
+		} else {
+			http.Error(w, "Error getting position", http.StatusInternalServerError)
+		}
+	}
+}
 
 func main() {
 	ctx := context.Background()
@@ -19,7 +41,7 @@ func main() {
 		return
 	}
 
-	// http.HandleFunc("/vehicle", createVehicleHandler(actorSystem))
+	http.HandleFunc("/vehicle", createVehicleHandler(engine))
 
 	fmt.Println("Server is starting on port 8080...")
 	go func() {

@@ -10,13 +10,12 @@ import (
 	"github.com/anthdm/hollywood/actor"
 )
 
-var pids = make(map[string]*actor.PID)
-
 func createVehicleHandler(engine *actor.Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vid := r.URL.Query().Get("id")
 
-		pid := pids[vid]
+		pid := engine.Registry.GetPID("video", vid)
+
 		resp := engine.Request(pid, &positionRequest{}, time.Minute)
 		result, err := resp.Result()
 		if err != nil {
@@ -59,10 +58,9 @@ func main() {
 		if event.VehiclePosition.HasValidPosition() {
 			vid := &event.VehicleId
 
-			pid := pids[*vid]
+			pid := engine.Registry.GetPID("video", *vid)
 			if pid == nil {
-				pid = engine.Spawn(NewVehicle, *vid, actor.WithID(*vid))
-				pids[*vid] = pid
+				pid = engine.Spawn(NewVehicle, "video", actor.WithID(*vid))
 			}
 
 			engine.Send(pid, &Position{

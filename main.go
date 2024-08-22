@@ -15,6 +15,10 @@ func createVehicleHandler(engine *actor.Engine) http.HandlerFunc {
 		vid := r.URL.Query().Get("id")
 
 		pid := engine.Registry.GetPID("video", vid)
+		if pid == nil {
+			http.Error(w, "Error lookup PID", http.StatusInternalServerError)
+			return
+		}
 
 		resp := engine.Request(pid, &positionRequest{}, time.Minute)
 		result, err := resp.Result()

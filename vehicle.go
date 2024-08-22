@@ -38,7 +38,7 @@ func (v *Vehicle) Receive(ctx *actor.Context) {
 		fmt.Println("actor stopped")
 	case *Position:
 		v.position = append(v.position, *msg)
-		fmt.Println(v.position)
+		// fmt.Println(v.position)
 	case *positionRequest:
 		res := positionResponse{Position: v.position[len(v.position)-1]}
 		ctx.Respond(res)

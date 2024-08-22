@@ -61,7 +61,7 @@ func main() {
 
 			pid := pids[*vid]
 			if pid == nil {
-				pid = engine.Spawn(NewVehicle, *vid)
+				pid = engine.Spawn(NewVehicle, *vid, actor.WithID(*vid))
 				pids[*vid] = pid
 			}
 

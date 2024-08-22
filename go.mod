@@ -4,7 +4,7 @@ go 1.21.3
 
 require (
 	github.com/DataDog/gostackparse v0.7.0 // indirect
-	github.com/anthdm/hollywood v0.0.0-20240623113250-46e66804eb19 // indirect
+	github.com/anthdm/hollywood v1.0.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect

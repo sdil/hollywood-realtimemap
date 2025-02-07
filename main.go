@@ -8,13 +8,14 @@ import (
 	"time"
 
 	"github.com/anthdm/hollywood/actor"
+	"github.com/anthdm/hollywood/cluster"
 )
 
 func createVehicleHandler(engine *actor.Engine) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vid := r.URL.Query().Get("id")
 
-		pid := engine.Registry.GetPID("video", vid)
+		pid := engine.Registry.GetPID("vehicle", vid)
 		if pid == nil {
 			http.Error(w, "Error lookup PID", http.StatusInternalServerError)
 			return
@@ -38,17 +39,28 @@ func createVehicleHandler(engine *actor.Engine) http.HandlerFunc {
 func main() {
 	ctx := context.Background()
 
-	engine, err := actor.NewEngine(actor.NewEngineConfig())
+	config := cluster.NewConfig().
+		WithID(os.Getenv("HOSTNAME")).
+		WithListenAddr("0.0.0.0:8081").
+		WithRegion("eu-west")
+	c, err := cluster.New(config)
 	if err != nil {
-		fmt.Println("Error creating actor system", err)
-		return
+		fmt.Println("Error creating cluster", err)
 	}
+	c.RegisterKind("vehicle", NewVehicle, cluster.NewKindConfig())
+	c.Start()
 
-	http.HandleFunc("/vehicle", createVehicleHandler(engine))
+	// engine, err := actor.NewEngine(actor.NewEngineConfig())
+	// if err != nil {
+	// 	fmt.Println("Error creating actor system", err)
+	// 	return
+	// }
 
-	fmt.Println("Server is starting on port 8080...")
+	http.HandleFunc("/vehicle", createVehicleHandler(c.Engine()))
+
+	fmt.Println("Server is starting on port 8082...")
 	go func() {
-		host := "localhost:8080"
+		host := "localhost:8082"
 		if os.Getenv("RENDER") == "true" {
 			host = "0.0.0.0:10000"
 		}
@@ -62,12 +74,12 @@ func main() {
 		if event.VehiclePosition.HasValidPosition() {
 			vid := &event.VehicleId
 
-			pid := engine.Registry.GetPID("video", *vid)
+			pid := c.Engine().Registry.GetPID("vehicle", *vid)
 			if pid == nil {
-				pid = engine.Spawn(NewVehicle, "video", actor.WithID(*vid))
+				pid = c.Engine().Spawn(NewVehicle, "vehicle", actor.WithID(*vid))
 			}
 
-			engine.Send(pid, &Position{
+			c.Engine().Send(pid, &Position{
 				Latitude:  *event.VehiclePosition.Latitude,
 				Longitude: *event.VehiclePosition.Longitude,
 			})

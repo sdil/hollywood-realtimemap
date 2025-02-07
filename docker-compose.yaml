@@ -1,0 +1,17 @@
+services:
+  node0:
+    build: ./
+    hostname: node0
+    ports:
+      - "8085:8082"
+    environment:
+      - HOSTNAME=node0
+
+  node1:
+    build: ./
+    hostname: node1
+    ports:
+      - "8086:8082"
+    environment:
+      - HOSTNAME=node1
+
